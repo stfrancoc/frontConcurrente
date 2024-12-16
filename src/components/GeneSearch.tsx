@@ -137,7 +137,7 @@ export function GeneSearch({
 
       <div className="flex justify-between items-center">
         <div className="text-sm text-gray-700">
-          Mostrando {results.length} de {totalResults} resultados
+          Mostrando {results.length} resultados
         </div>
         <div className="flex gap-2 items-center">
           <button
@@ -148,7 +148,7 @@ export function GeneSearch({
             Anterior
           </button>
           <span className="px-3 py-1">
-            Página {pageCounter} de {totalPages}
+            Página {pageCounter}
           </span>
           <button
             onClick={() => handlePageChange(pageCounter + 1)}
