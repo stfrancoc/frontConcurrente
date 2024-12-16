@@ -1,28 +1,56 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, Upload } from 'lucide-react';
-import { GeneResult } from '../types';
+import { GeneResult, UploadedFile } from '../types';
 import { GeneTable } from './GeneTable';
+import { FileSelector } from './FileSelector';
 
 interface GeneSearchProps {
   onFileUpload: (file: File) => Promise<void>;
-  onSearch: (query: string, page: number, perPage: number) => Promise<void>;
+  onSearch: (query: string, page: number, perPage: number, fileName: string) => Promise<void>;
   results: GeneResult[];
   totalResults: number;
   currentPage: number;
   perPage: number;
 }
 
-export function GeneSearch({ 
-  onFileUpload, 
-  onSearch, 
-  results = [], 
-  totalResults, 
-  currentPage, 
-  perPage 
+const API_URL = 'http://127.0.0.1:8000';
+
+export function GeneSearch({
+  onFileUpload,
+  onSearch,
+  results = [],
+  totalResults,
+  currentPage,
+  perPage
 }: GeneSearchProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  const [selectedFileName, setSelectedFileName] = useState('');
   const [pageCounter, setPageCounter] = useState(currentPage);
+
+  useEffect(() => {
+    fetchUploadedFiles();
+  }, []);
+
+  const fetchUploadedFiles = async () => {
+    try {
+      const response = await fetch(`${API_URL}/upload/uploaded-files`);
+      if (response.ok) {
+        const fileNames: string[] = await response.json();
+        // Transformar los nombres en objetos UploadedFile
+        const files: UploadedFile[] = fileNames.map((fileName) => ({
+          name: fileName,
+          path: `${API_URL}/uploads/${fileName}`, // Construye el path según sea necesario
+        }));
+        setUploadedFiles(files);
+      } else {
+        console.error('Error al obtener los archivos:', response.statusText);
+      }
+    } catch (error) {
+      console.error('Error fetching files:', error);
+    }
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -34,16 +62,22 @@ export function GeneSearch({
     if (selectedFile) {
       await onFileUpload(selectedFile);
       setSelectedFile(null);
+      // Actualizar la lista de archivos después de subir uno nuevo
+      fetchUploadedFiles();
     }
   };
 
   const handleSearch = () => {
-    onSearch(searchQuery, pageCounter, perPage);
+    if (!selectedFileName) {
+      alert('Por favor seleccione un archivo para buscar');
+      return;
+    }
+    onSearch(searchQuery, pageCounter, perPage, selectedFileName);
   };
 
   const handlePageChange = (newPage: number) => {
     setPageCounter(newPage);
-    onSearch(searchQuery, newPage, perPage);
+    onSearch(searchQuery, newPage, perPage, selectedFileName);
   };
 
   const totalPages = Math.ceil(totalResults / perPage);
@@ -75,6 +109,12 @@ export function GeneSearch({
           </button>
         )}
       </div>
+
+      <FileSelector
+        files={uploadedFiles}
+        selectedFile={selectedFileName}
+        onFileSelect={setSelectedFileName}
+      />
 
       <div className="flex gap-4">
         <input

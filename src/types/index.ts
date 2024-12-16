@@ -22,3 +22,8 @@ export interface GeneSearchResult {
   per_page: number;
   results: GeneResult[];
 }
+
+export interface UploadedFile {
+  name: string;
+  path: string;
+}

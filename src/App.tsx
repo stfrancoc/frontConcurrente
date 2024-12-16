@@ -149,14 +149,14 @@ function App() {
   };
 
   // Buscar genes
-  const handleSearch = async (query: string, page: number, resultsPerPage: number) => {
+  const handleSearch = async (query: string, page: number, resultsPerPage: number,fileName: string) => {
     if (!query) {
       alert('Por favor, ingresa un término de búsqueda.');
       return;
     }
     try {
       const response = await fetch(
-        `${API_URL}/search/?search=${query}&page=${page}&per_page=${resultsPerPage}`,
+        `${API_URL}/search/?search=${query}&page=${page}&per_page=${resultsPerPage}&collection_name=${fileName}`,
         { headers: { Authorization: `Bearer ${authState.token}` } }
       );
 
