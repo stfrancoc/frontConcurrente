@@ -35,7 +35,7 @@ function App() {
 
   const handleLogin = async (username: string, password: string) => {
     try {
-      const response = await fetch(`${API_URL}/users/simple-login`, {
+      const response = await fetch(`${API_URL}/users/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -108,7 +108,7 @@ function App() {
   const handleSearch = async (query: string, page: number, resultsPerPage: number) => {
     try {
       const response = await fetch(
-        `${API_URL}/?search=${query}&page=${page}&per_page=${resultsPerPage}`,
+        `${API_URL}/search/?search=${query}&page=${page}&per_page=${resultsPerPage}`,
         {
           headers: {
             'Authorization': `Bearer ${authState.token}`,
