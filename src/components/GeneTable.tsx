@@ -14,6 +14,9 @@ export function GeneTable({ results }: GeneTableProps) {
     );
   }
 
+  // Get all unique output keys from the first result
+  const outputKeys = results[0] ? Object.keys(results[0].outputs).sort() : [];
+
   return (
     <div className="overflow-x-auto">
       <table className="min-w-full bg-white shadow-md rounded-lg">
@@ -46,9 +49,11 @@ export function GeneTable({ results }: GeneTableProps) {
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               Format
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Outputs
-            </th>
+            {outputKeys.map((key) => (
+              <th key={key} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                {key}
+              </th>
+            ))}
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-200">
@@ -63,21 +68,11 @@ export function GeneTable({ results }: GeneTableProps) {
               <td className="px-6 py-4 whitespace-nowrap">{gene.filter_status}</td>
               <td className="px-6 py-4 whitespace-nowrap">{gene.info}</td>
               <td className="px-6 py-4 whitespace-nowrap">{gene.format}</td>
-              <td className="px-6 py-4">
-                <details className="cursor-pointer">
-                  <summary className="text-blue-600 hover:text-blue-800">
-                    Ver outputs
-                  </summary>
-                  <div className="mt-2 space-y-1 text-sm">
-                    {Object.entries(gene.outputs).map(([key, value]) => (
-                      <div key={key} className="grid grid-cols-2 gap-2">
-                        <span className="font-medium">{key}:</span>
-                        <span>{value}</span>
-                      </div>
-                    ))}
-                  </div>
-                </details>
-              </td>
+              {outputKeys.map((key) => (
+                <td key={key} className="px-6 py-4 whitespace-nowrap">
+                  {gene.outputs[key]}
+                </td>
+              ))}
             </tr>
           ))}
         </tbody>

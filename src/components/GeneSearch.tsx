@@ -15,13 +15,14 @@ interface GeneSearchProps {
 export function GeneSearch({ 
   onFileUpload, 
   onSearch, 
-  results = [], // Provide default empty array
+  results = [], 
   totalResults, 
   currentPage, 
   perPage 
 }: GeneSearchProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [pageCounter, setPageCounter] = useState(currentPage);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -37,7 +38,12 @@ export function GeneSearch({
   };
 
   const handleSearch = () => {
-    onSearch(searchQuery, currentPage, perPage);
+    onSearch(searchQuery, pageCounter, perPage);
+  };
+
+  const handlePageChange = (newPage: number) => {
+    setPageCounter(newPage);
+    onSearch(searchQuery, newPage, perPage);
   };
 
   const totalPages = Math.ceil(totalResults / perPage);
@@ -93,20 +99,19 @@ export function GeneSearch({
         <div className="text-sm text-gray-700">
           Mostrando {results.length} de {totalResults} resultados
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
           <button
-            onClick={() => onSearch(searchQuery, currentPage - 1, perPage)}
-            disabled={currentPage === 1}
+            onClick={() => handlePageChange(pageCounter - 1)}
+            disabled={pageCounter === 1}
             className="px-3 py-1 border rounded-md disabled:opacity-50"
           >
             Anterior
           </button>
           <span className="px-3 py-1">
-            Página {currentPage} de {totalPages}
+            Página {pageCounter} de {totalPages}
           </span>
           <button
-            onClick={() => onSearch(searchQuery, currentPage + 1, perPage)}
-            disabled={currentPage === totalPages}
+            onClick={() => handlePageChange(pageCounter + 1)}
             className="px-3 py-1 border rounded-md disabled:opacity-50"
           >
             Siguiente
