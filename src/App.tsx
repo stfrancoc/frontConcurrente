@@ -12,75 +12,107 @@ function App() {
   const [authState, setAuthState] = useState<AuthState>({
     isAuthenticated: false,
     token: '',
-    isVerified: false
+    isVerified: false,
+    username: '',
   });
   const [showRegister, setShowRegister] = useState(false);
   const [searchResults, setSearchResults] = useState<GeneResult[]>([]);
   const [totalResults, setTotalResults] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [perPage, setPerPage] = useState(25);
+  const [showVerification, setShowVerification] = useState(false);
 
-  const handleVerify = async (code: string) => {
+  // Verificar usuario con código de seguridad
+  const handleVerify = async (email: string, securityKey: string) => {
+    if (!email || !securityKey) {
+      alert('Por favor, proporciona todos los datos necesarios.');
+      return;
+    }
     try {
-      if (code === "123456") {
-        setAuthState(prev => ({ ...prev, isVerified: true }));
+      const response = await fetch(`${API_URL}/users/verify-security-key`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, security_key: securityKey }),
+      });
+
+      console.log(JSON.stringify({ email, security_key: securityKey }));
+      if (response.ok) {
+        setAuthState((prev) => ({
+          ...prev,
+          isAuthenticated: true,
+          isVerified: true,
+        }));
+        alert('Verificación exitosa.');
       } else {
-        alert('Código de verificación inválido');
+        const errorData = await response.json();
+        alert(errorData.message || 'Error al verificar el código.');
       }
     } catch (error) {
       console.error('Error:', error);
-      alert('Error al verificar el código');
+      alert('Error al conectar con el servidor.');
     }
   };
 
+  // Manejar inicio de sesión
   const handleLogin = async (username: string, password: string) => {
+    if (!username || !password) {
+      alert('Por favor, proporciona tu usuario y contraseña.');
+      return;
+    }
     try {
-      const response = await fetch(`${API_URL}/users/simple-login`, {
+      const response = await fetch(`${API_URL}/users/login`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
       });
 
       if (response.ok) {
         const data = await response.json();
-        setAuthState(prev => ({
+        setAuthState((prev) => ({
           ...prev,
           token: data.access_token,
-          isAuthenticated: true
+          isAuthenticated: true,
+          isVerified: false,
+          username,
         }));
+        setShowVerification(true);
       } else {
-        alert('Error al iniciar sesión');
+        const errorData = await response.json();
+        alert(errorData.message || 'Error al iniciar sesión.');
       }
     } catch (error) {
       console.error('Error:', error);
-      alert('Error al conectar con el servidor');
+      alert('Error al conectar con el servidor.');
     }
   };
 
+  // Manejar registro de usuario
   const handleRegister = async (username: string, password: string) => {
+    if (!username || !password) {
+      alert('Por favor, proporciona un usuario y contraseña.');
+      return;
+    }
     try {
-      const response = await fetch(`${API_URL}/users/simple-register`, {
+      const response = await fetch(`${API_URL}/users/register`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
       });
 
       if (response.ok) {
         setShowRegister(false);
-        alert('Registro exitoso. Por favor inicie sesión.');
+        alert('Registro exitoso. Por favor, inicie sesión.');
       } else {
-        alert('Error al registrar usuario');
+        const errorData = await response.json();
+        alert(errorData.message || 'Error al registrar usuario.');
       }
     } catch (error) {
       console.error('Error:', error);
-      alert('Error al conectar con el servidor');
+      alert('Error al conectar con el servidor.');
     }
   };
 
+  // Subir archivo
   const handleFileUpload = async (file: File) => {
     const formData = new FormData();
     formData.append('file', file);
@@ -88,32 +120,31 @@ function App() {
     try {
       const response = await fetch(`${API_URL}/upload/upload`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${authState.token}`,
-        },
+        headers: { Authorization: `Bearer ${authState.token}` },
         body: formData,
       });
 
       if (response.ok) {
-        alert('Archivo subido exitosamente');
+        alert('Archivo subido exitosamente.');
       } else {
-        alert('Error al subir el archivo');
+        alert('Error al subir el archivo.');
       }
     } catch (error) {
       console.error('Error:', error);
-      alert('Error al conectar con el servidor');
+      alert('Error al conectar con el servidor.');
     }
   };
 
+  // Buscar genes
   const handleSearch = async (query: string, page: number, resultsPerPage: number) => {
+    if (!query) {
+      alert('Por favor, ingresa un término de búsqueda.');
+      return;
+    }
     try {
       const response = await fetch(
-        `${API_URL}/?search=${query}&page=${page}&per_page=${resultsPerPage}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${authState.token}`,
-          },
-        }
+        `${API_URL}/search/?search=${query}&page=${page}&per_page=${resultsPerPage}`,
+        { headers: { Authorization: `Bearer ${authState.token}` } }
       );
 
       if (response.ok) {
@@ -123,17 +154,22 @@ function App() {
         setCurrentPage(data.page);
         setPerPage(data.per_page);
       } else {
-        alert('Error al buscar genes');
+        alert('Error al buscar genes.');
       }
     } catch (error) {
       console.error('Error:', error);
-      alert('Error al conectar con el servidor');
+      alert('Error al conectar con el servidor.');
     }
   };
 
+  // Renderizar contenido basado en estado de autenticación
   const renderAuthContent = () => {
     if (!authState.isAuthenticated) {
-      return showRegister ? (
+      return showVerification ? (
+        <VerificationForm
+          onVerify={(code) => handleVerify(authState.username, code)}
+        />
+      ) : showRegister ? (
         <RegisterForm
           onRegister={handleRegister}
           onBackToLogin={() => setShowRegister(false)}
@@ -147,7 +183,11 @@ function App() {
     }
 
     if (!authState.isVerified) {
-      return <VerificationForm onVerify={handleVerify} />;
+      return (
+        <VerificationForm
+          onVerify={(code) => handleVerify(authState.username, code)}
+        />
+      );
     }
 
     return (
