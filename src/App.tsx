@@ -22,6 +22,19 @@ function App() {
   const [perPage, setPerPage] = useState(25);
   const [showVerification, setShowVerification] = useState(false);
 
+  // Función para cerrar sesión
+  const handleLogout = () => {
+    setAuthState({
+      isAuthenticated: false,
+      token: '',
+      isVerified: false,
+      username: '',
+    });
+    setShowVerification(false);
+    setShowRegister(false);
+    alert('Has cerrado sesión exitosamente.');
+  };
+
   // Verificar usuario con código de seguridad
   const handleVerify = async (email: string, securityKey: string) => {
     if (!email || !securityKey) {
@@ -191,14 +204,22 @@ function App() {
     }
 
     return (
-      <GeneSearch
-        onFileUpload={handleFileUpload}
-        onSearch={handleSearch}
-        results={searchResults}
-        totalResults={totalResults}
-        currentPage={currentPage}
-        perPage={perPage}
-      />
+      <div>
+        <button
+          onClick={handleLogout}
+          className="mb-4 p-2 bg-red-500 text-white rounded"
+        >
+          Cerrar sesión
+        </button>
+        <GeneSearch
+          onFileUpload={handleFileUpload}
+          onSearch={handleSearch}
+          results={searchResults}
+          totalResults={totalResults}
+          currentPage={currentPage}
+          perPage={perPage}
+        />
+      </div>
     );
   };
 
