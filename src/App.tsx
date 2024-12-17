@@ -167,7 +167,7 @@ function App() {
         setCurrentPage(data.page);
         setPerPage(data.per_page);
       } else {
-        alert('Error al buscar genes.');
+        alert('No se encontraron coincidencias');
       }
     } catch (error) {
       console.error('Error:', error);
